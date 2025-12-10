@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# Database backup and sync utility
+# Usage: dbx <project_name>
+
+set -e
+
+# Check if project name is provided
+if [ -z "$1" ]; then
+    echo "❌ Error: Project name required"
+    echo "Usage: dbx <project_name>"
+    echo ""
+    echo "Available projects:"
+    ls -1 "$(dirname "$0")/config" 2>/dev/null | sed 's/\.conf$//' | sed 's/^/  - /' || echo "  (no configs found)"
+    exit 1
+fi
+
+PROJECT_NAME="$1"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CONFIG_FILE="$SCRIPT_DIR/config/${PROJECT_NAME}.conf"
+
+# Check if config file exists
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "❌ Error: Config file not found: $CONFIG_FILE"
+    echo ""
+    echo "Available projects:"
+    ls -1 "$SCRIPT_DIR/config" 2>/dev/null | sed 's/\.conf$//' | sed 's/^/  - /' || echo "  (no configs found)"
+    exit 1
+fi
+
+# Source the config file
+source "$CONFIG_FILE"
+
+# Validate required variables
+REQUIRED_VARS=("SSH_USER" "SSH_SERVER" "SSH_PORT" "WORK_PATH" "DB_NAME" "DB_USER" "DB_PASS" "LOCAL_DB_NAME" "BACKUP_DIR" "MYSQL_BIN_PATH" "MYSQL_SOCKET" "MYSQL_USER")
+for var in "${REQUIRED_VARS[@]}"; do
+    if [ -z "${!var}" ]; then
+        echo "❌ Error: Required variable '$var' not set in config file"
+        exit 1
+    fi
+done
+
+# Create timestamp
+TIMESTAMP=$(date +%Y-%m-%d_%H%M%S)
+
+# Define backup file path
+BACKUP_FILE="$BACKUP_DIR/${LOCAL_DB_NAME}_backup_${TIMESTAMP}.sql"
+
+# Ensure backup directory exists
+mkdir -p "$BACKUP_DIR"
+
+# Backup the local database with timestamp
+echo "📦 Backing up local database: $LOCAL_DB_NAME"
+"$MYSQL_BIN_PATH/mysqldump" --socket "$MYSQL_SOCKET" -u "$MYSQL_USER" "$LOCAL_DB_NAME" > "$BACKUP_FILE"
+echo "✅ Local database backup completed: $BACKUP_FILE"
+
+# Import the remote database
+echo "🔄 Importing remote database: $DB_NAME"
+ssh "$SSH_USER@$SSH_SERVER" -p "$SSH_PORT" "mysqldump -u $DB_USER -p$DB_PASS $DB_NAME" | "$MYSQL_BIN_PATH/mysql" --socket "$MYSQL_SOCKET" -u "$MYSQL_USER" "$LOCAL_DB_NAME"
+echo "✅ Remote database imported"
+

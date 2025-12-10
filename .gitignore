@@ -1,0 +1,6 @@
+# Ignore all contents of backups directory
+backups/*
+
+# Ignore all contents of config directory except example.conf
+config/*
+!config/example.conf
