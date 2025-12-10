@@ -49,21 +49,11 @@ cp config/example.conf config/myproject.conf
 ## Usage
 
 ```bash
-dbx <project_name>
+dbx myproject
 ```
 
-The script will:
-1. Create a timestamped backup of your local database
-2. Import the remote database to replace your local database
-
-### Example
-
-```bash
-dbx oceancom
-```
-
-This will:
-- Look for `config/oceancom.conf`
+This script will:
+- Look for `config/myproject.conf`
 - Backup your local database to the configured backup directory
 - Connect via SSH to the remote server
 - Dump the remote database and import it locally
@@ -75,3 +65,6 @@ To see all configured projects:
 dbx
 # (running without arguments shows available projects)
 ```
+
+
+** Security note: this currently uses the mysqldump command's `-p` flag in the the remote database connection, using the password in the command line argument. While this is not ideal, it works. We're planning on changing this at some point, but in the mean time don't be alarmed when you see the standard "mysqldump: [Warning] Using a password on the command line interface can be insecure." warning. 

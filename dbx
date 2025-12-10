@@ -7,11 +7,11 @@ set -e
 
 # Check if project name is provided
 if [ -z "$1" ]; then
-    echo "❌ Error: Project name required"
+    # echo "❌ Error: Project name required"
     echo "Usage: dbx <project_name>"
     echo ""
     echo "Available projects:"
-    ls -1 "$(dirname "$0")/config" 2>/dev/null | sed 's/\.conf$//' | sed 's/^/  - /' || echo "  (no configs found)"
+    ls -1 "$(dirname "$0")/config" 2>/dev/null | sed 's/\.conf$//' | grep -v '^example$' | sed 's/^/ - /' || echo "  (no configs found)"
     exit 1
 fi
 
@@ -24,7 +24,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
     echo "❌ Error: Config file not found: $CONFIG_FILE"
     echo ""
     echo "Available projects:"
-    ls -1 "$SCRIPT_DIR/config" 2>/dev/null | sed 's/\.conf$//' | sed 's/^/  - /' || echo "  (no configs found)"
+    ls -1 "$SCRIPT_DIR/config" 2>/dev/null | sed 's/\.conf$//' | grep -v '^example$' | sed 's/^/ - /' || echo "  (no configs found)"
     exit 1
 fi
 
@@ -56,6 +56,10 @@ echo "✅ Local database backup completed: $BACKUP_FILE"
 
 # Import the remote database
 echo "🔄 Importing remote database: $DB_NAME"
-ssh "$SSH_USER@$SSH_SERVER" -p "$SSH_PORT" "mysqldump -u $DB_USER -p$DB_PASS $DB_NAME" | "$MYSQL_BIN_PATH/mysql" --socket "$MYSQL_SOCKET" -u "$MYSQL_USER" "$LOCAL_DB_NAME"
+# Use printf %q to safely escape variables with special characters
+DB_USER_ESC=$(printf %q "$DB_USER")
+DB_PASS_ESC=$(printf %q "$DB_PASS")
+DB_NAME_ESC=$(printf %q "$DB_NAME")
+ssh "$SSH_USER@$SSH_SERVER" -p "$SSH_PORT" "mysqldump -u $DB_USER_ESC --password=$DB_PASS_ESC $DB_NAME_ESC" | "$MYSQL_BIN_PATH/mysql" --socket "$MYSQL_SOCKET" -u "$MYSQL_USER" "$LOCAL_DB_NAME"
 echo "✅ Remote database imported"
 
