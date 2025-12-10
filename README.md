@@ -22,11 +22,9 @@ git clone git@github.com:jyoungblood/dbx.git ~/.dbx
 chmod +x ~/.dbx/dbx
 ```
 
-### Add to your shell
+### Add to shell
 
-Add an alias to your shell configuration file:
-
-(add to `~/.zshrc` or `~/.bashrc` or `~/.bash_profile`):
+Add an alias to your shell configuration file *(in `~/.zshrc` or `~/.bashrc` or `~/.bash_profile`)*:
 ```bash
 alias dbx="~/.dbx/dbx"
 ```
