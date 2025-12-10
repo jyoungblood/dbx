@@ -1,6 +1,6 @@
 # dbx
 
-A simple database backup and sync utility that imports a remote database via SSH and saves a backup of the previous local version.
+A simple database sync utility that imports a remote database via SSH and saves a backup of the previous local version.
 
 ## Setup
 
