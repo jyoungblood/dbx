@@ -2,6 +2,9 @@
 
 A small mysql utility that imports a remote database via SSH and saves a backup of the previous local version.
 
+Ideal for scenarios when you want a local copy of your production database, and need to update it often.
+
+
 ## Setup
 
 ### Installation
